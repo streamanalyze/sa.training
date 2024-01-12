@@ -1,0 +1,5 @@
+//plot: Text
+http:download_file("https://s3.eu-north-1.amazonaws.com/assets.streamanalyze.com/data/db2-course-lab-ht2023/temp_pressure_data.csv",{},
+                   models:folder('my-model') + "test-data/" + "temp_pressure_data.csv");
+http:download_file("https://s3.eu-north-1.amazonaws.com/assets.streamanalyze.com/data/db2-course-lab-ht2023/temp_pressure_stream.csv",{},
+                   models:folder('my-model') + "test-data/" + "temp_pressure_stream.csv");

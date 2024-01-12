@@ -1,0 +1,47 @@
+//load_osql(models:folder('my-model') + "test-data/initialize.osql");
+
+//models:load('my-model');
+
+// Graph 1: Look at training data
+
+//plot: Scatter plot
+select Vector of { "pressure (atm)": v[1], "temp (C)": v[2] }
+  from Vector v, Number n
+ where v = kmeans_chemproc:datapoints(n);
+
+
+ // Graph 2: Look at clustering of test measurements
+
+//plot: Multi plot
+{
+  "sa_plot": "Scatter plot",
+  "size_axis": "none",
+  "color_axis": 3,
+  "memory": 1000
+};
+select v
+  from Vector v, Number cid, Vector of number row, Number n
+  where row = kmeans_chemproc:datapoints(n)
+   and cid = kmeans_chemproc:classify(row)
+   and v = concat(row,[cid]);
+
+// Graph 3: Classify a stream of data
+
+// Tip: Is this slow? Look at the pace of temp_pressure_sensor()
+
+//plot: Multi plot
+{
+  "sa_plot": "Scatter plot",
+  "size_axis": "none",
+  "color_axis": 3,
+  "memory": 10005
+};
+[0,0,1];        // set plot axis ranges
+[1000,0,1];     // set plot axis ranges
+[0,1000,1];     // set plot axis ranges
+[1000,1000,1];  // set plot axis ranges
+select v
+  from Vector v, Number cid, Vector of number row
+  where row in temp_pressure_sensor()
+   and cid = kmeans_chemproc:classify(row)
+   and v = concat(row,[cid]);

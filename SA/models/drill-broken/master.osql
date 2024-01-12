@@ -1,0 +1,4 @@
+load_osql(models:folder('drill-broken') + "helper.osql");
+load_osql(models:folder('drill-broken') + "input.osql");
+
+alert_changed("CHEAP", simulate_accelerometer(), simulate_temperature());

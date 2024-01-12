@@ -1,0 +1,19 @@
+// 1. load the functions in recorded-signals
+
+
+// 2. load the kmeans system model
+
+
+// 3. generate an instance of kmeans named "chemproc" 
+
+
+// 4. add the temperature and pressure data from temp_pressure_data()
+
+
+// Good! Now go to usage.osql and look at the first graph.
+
+// 5. Use :fit to train the k-means model.
+// Use max_iter=10000 and num_cluster=5
+
+
+// Done! Now go to usage.osql and look at the second and third graphs.

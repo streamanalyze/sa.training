@@ -1,0 +1,2 @@
+load_osql(models:folder("detect-shake") + "shake.osql");
+load_osql(models:folder("detect-shake") + "simulate.osql");

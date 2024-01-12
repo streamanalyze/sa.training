@@ -1,0 +1,123 @@
+// **************************************
+// Training session 3
+// Using windows to slice, sample, 
+// smooth and select on streams
+// **************************************
+
+// count-based windows
+doc("winagg");
+
+// tumbling window
+winagg(heartbeat(1), 5, 5);
+
+// sliding window
+winagg(heartbeat(1), 5, 3);
+
+// sampling window
+winagg(heartbeat(1), 1, 3);
+
+// using statistical functions on windows
+
+//consider this simstream
+//plot: line plot
+simstream(0.01);
+
+//apply a sliding window
+winagg(simstream(0.01), 20,1);
+
+// Create mean of each window - a sliding mean
+//plot: line plot
+mean(winagg(simstream(0.01), 20, 1));
+
+// Compare the sliding mean with the original simstream
+//plot: line plot
+pivot([simstream(0.01), 
+       mean(winagg(simstream(0.01), 20, 1))]);
+
+//////////////////////////////////////////
+
+// time-based windows
+doc("twinagg");
+
+// twinagg needs timestamped values - lets create a timestamped heartbeat
+ts(heartbeat(1));
+
+// tumbling window
+twinagg(ts(heartbeat(1)), 2.5, 2.5);
+
+// sliding window
+twinagg(ts(heartbeat(1)), 3, 1);
+
+// sampling window
+twinagg(ts(heartbeat(1)), 1, 2);
+
+//////////////////////////////////////////
+
+// Combining streams
+
+// Imagine we have  three signals A, B and C
+create function signalA() -> stream of number as
+select stream of round(n) +1 from number n where n in 2*heartbeat(0.5) limit 10;
+signalA();
+
+create function signalB() -> stream of number as
+select stream of 200*sin(n+1) from number n where n in 2*heartbeat(0.5) limit 10;
+signalB();
+
+create function signalC() -> stream of number as
+select stream of case when sin(n)>0.9 then 1 else 0 end from number n where n in 2*heartbeat(0.5) limit 10;
+signalC();
+
+// Now pivot
+pivot([signalA(), signalB(), signalC()]);
+
+// Avoid starting with null
+pivot([signalA(), signalB(), signalC()], [1,100,0]);
+
+////////////
+
+// windows with one value from each signal
+// pp means pretty-print!
+pp(winagg(pivot([signalA(), signalB(), signalC()], [1,100,0]), 3, 3));
+
+// transpose to get inner vectors with signals
+pp(transpose(winagg(pivot([signalA(), signalB(), signalC()], [1,100,0]), 3, 3)));
+
+//////////////////////////////////////////
+
+// conditional windows
+doc("twinagg");
+
+create function ts_heartbeat() -> stream of timeval as
+select stream of ts(n) from number n where n in heartbeat(1) limit 8;
+ts_heartbeat();
+
+create function pred_example(timeval of number value, vector args) -> boolean as
+select value(value) > args[1];
+
+twinagg(ts_heartbeat(), 5, #'pred_example', [6]);
+
+// Combined conditional windows
+
+// use our pivoted stream
+create function signal_abc() -> stream of timeval of vector as
+ts(pivot([signalA(), signalB(), signalC()], [1,100,0]));
+signal_abc();
+
+// create predicate function
+create function C_is_one(timeval of vector tov) -> boolean as
+value(tov)[3] > 0;
+
+// get windows
+pp(value(twinagg(signal_abc(), 0.5, #'C_is_one')));
+
+// Look only at signalB 
+select transposed[2], ts
+from   timeval of vector time_window,
+       matrix window,
+       vector of vector transposed, 
+       timeval ts
+where time_window in twinagg(signal_abc(), 0.5, #'C_is_one')
+and window = value(time_window)
+and transposed = transpose(window)
+and ts = timestamp(time_window);

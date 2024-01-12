@@ -1,0 +1,47 @@
+create function criteria_values(charstring name) -> number as stored;
+set criteria_values("heavy_temperature_max") = 200;
+set criteria_values("heavy_temperature_min") = -50;
+set criteria_values("heavy_shake_stdev") = 20;
+set criteria_values("industrial_temperature_max") = 100;
+set criteria_values("industrial_temperature_min") = -30;
+set criteria_values("industrial_shake_stdev") = 10;
+set criteria_values("home_temperature_max") = 50;
+set criteria_values("home_temperature_min") = -20;
+set criteria_values("home_shake_stdev") = 5;
+set criteria_values("cheap_temperature_max") = 25;
+set criteria_values("cheap_temperature_min") = 5;
+set criteria_values("cheap_shake_stdev") = 2;
+
+create function get_criteria(charstring machine_type, charstring sensor, charstring criteria_type) -> number
+as select criteria_values(name) 
+from charstring name 
+where like(name, "?" + machine_type + "?" + sensor + "?" + criteria_type);
+
+create function temperature_alert(charstring MACHINE, stream of number termometer) -> stream of integer
+as select stream of alert from integer alert, number temperature, number max, number min
+where temperature in termometer
+and max = get_criteria(MACHINE, "temp", "max")
+and min = get_criteria(MACHINE, "temp", "min")
+and alert = case when (temperature > max or temperature < min) then 1 else 0 end;
+
+create function gravity_acceleration(stream of vector of number accelerometer) -> Stream of Number
+  as select Stream of sqrt(sum(g .^ 2))
+       from Vector of Number g
+      where g in accelerometer;
+
+create function stdev_gravity(stream of vector of number accelerometer) -> Stream of Number
+as stdev(winagg(gravity_acceleration(accelerometer), 50, 5));
+
+create function shake_alert(charstring MACHINE, stream of vector of number accelerometer)  -> Stream of Number
+ as select Stream of shakes
+       from number shakes, number elem, number threshold
+      where elem in stdev_gravity(accelerometer)
+      and threshold = get_criteria(MACHINE, "shake", "stdev")
+        and shakes = case when elem < threshold then 1 else 0 end;
+
+create function alert_changed(charstring MACHINE, stream of vector of number accelerometer, stream of number termometer) -> Stream of Vector of Number
+as select changed(s) 
+from stream s 
+where s = pivot([temperature_alert(MACHINE, termometer),
+                shake_alert(MACHINE, accelerometer)], 
+                [0,0]);

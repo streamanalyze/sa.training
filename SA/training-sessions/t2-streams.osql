@@ -1,0 +1,80 @@
+// **************************************
+// Training session 2
+// Examples of stream functions in OSQL
+// **************************************
+
+// some functions that create synthetic streams
+heartbeat(1);
+
+simstream(0.1);
+
+sample_stream("Hello stream",1);
+
+// A query theat takes a stream and outputs a stream
+// - a continouos query, CQ
+
+//plot: Line plot
+select sin(10*x)
+  from Number x
+ where x in heartbeat(0.05);
+
+// a CQ that acts as a filter
+//plot: Line plot
+select Stream of x
+  from Number x
+ where x in simstream(0.01)
+   and x > 0.7;
+
+// windows over streams
+
+doc("winagg");
+
+//plot: line plot
+sin(heartbeat(0.1)*5);
+
+winagg(sin(heartbeat(0.1)*5),10,10);
+
+//plot: Bar plot
+winagg(sin(heartbeat(0.1)*5),10,10);
+
+//same size, smaller stride - a sliding window
+//plot: Bar plot
+winagg(sin(heartbeat(0.1)*5),10,2);
+
+// A function with a CQ
+create function my_sampler(stream of number input) -> stream of number
+as select x
+from number x
+where x in winagg(input, 1, 10);
+
+// call the function
+my_sampler(heartbeat(0.1));
+
+
+// bar plot, scatter plot, line plot, pie chart
+
+//plot: Pie chart
+{
+  "apple": 10,
+  "bear": 20,
+  "citrus": 30
+};
+
+// more plot options with multi plot
+
+//plot: Multi plot
+{'sa_plot': 'Line plot', 'memory': 200};
+select [sin(x), cos(x)]
+  from Number x
+ where x in 10*heartbeat(.02);
+
+//plot: Multi plot
+{ "sa_plots":[
+  {'sa_plot': 'Line plot', 'memory': 200},
+  {'sa_plot': 'Scatter plot', 'memory': 200}
+]};
+select [sin(x)*sin(x/30), cos(x)*cos(x/30)]
+  from Number x
+ where x in 20*heartbeat(.01) 
+
+

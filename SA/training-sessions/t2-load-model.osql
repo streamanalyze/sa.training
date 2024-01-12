@@ -1,0 +1,42 @@
+// **************************************
+// Training session 2
+// Handling models in VS Code
+// **************************************
+
+// load the detect shake model
+models:load("detect-shake");
+
+// now we can use its functions
+
+//plot: line plot
+fake_accelerometer();
+
+shakes(fake_accelerometer());
+
+//plot: line plot
+recorded_accelerometer();
+
+shakes(recorded_accelerometer());
+
+// save a federation - get blob from SA Studio
+federation:save("sa-community", "--blob--");
+
+// connect to a saved federation
+federation:connect("sa-community", "vscode-myname", true, false);
+
+// verify the android phone is connect
+listening_edges();
+
+// if we connect to an edge the model can be deployed on it
+models:deploy(["android-edge"], "detect-shake");
+
+// then we can start it with the real signal
+
+//peer: android-edge
+shakes(signal_stream('accelerometer'));
+
+// but actually the edge contains the test-data as well
+// because it is placed in the model folder
+
+//peer: android-edge
+shakes(recorded_accelerometer());

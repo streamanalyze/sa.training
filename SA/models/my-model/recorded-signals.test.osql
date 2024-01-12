@@ -1,0 +1,12 @@
+load_osql(models:folder('my-model') + "recorded-signals.osql");
+
+validate "temp_pressure_data"
+check vectorof(temp_pressure_data())[1] => [533.110889944056,481.759696674557]
+check dim(vectorof(temp_pressure_data())) => 850;
+
+validate "temp_pressure_stream"
+check vectorof(temp_pressure_stream())[1] => [550.501334,599.702668]
+check dim(vectorof(temp_pressure_stream())) => 10000;
+
+validate "temp_pressure_sensor"
+check vectorof(select temp_pressure_sensor() limit 1)[1] => [550.501334,599.702668];
