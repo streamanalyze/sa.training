@@ -1,5 +1,5 @@
 # Introduction 
-This repo contains training material for Data Scientists that wants to learn about using SA Engine and coding in OSQL using VS Code.
+This repo contains training material for Data Scientists that want to learn about using SA Engine and coding in OSQL using VS Code.
 
 ## What you need
 To run the examples in this guide you need
