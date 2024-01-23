@@ -1,0 +1,89 @@
+// Load the DBSCAN system model
+system_models:load("dbscan");
+
+// Create a new instance of DBSCAN
+dbscan:generate('concentric');
+
+// As you can see in the output, the previous command generated
+//a series of functions with the prefix "concentric:".
+// You can view these at any time by using the built-in apropos()
+// command:
+apropos("concentric");
+
+// Define a function to generate noisy circles of points
+create function gen_datapoint(Number rad, Number xy_offset, Number noise, Number i)
+                                   -> Vector of Number
+  as [rad * sin(i*2*pi()/100) + frand(noise) -noise/2 + xy_offset,
+      rad * cos(i*2*pi()/100) + frand(noise) -noise/2 + xy_offset];
+
+// Test the gen_datapoint function out
+
+//plot: Scatter plot
+select Vector of gen_datapoint(1, 0.2, 0.0, 0.0, range(100));
+
+// Populate the concentric instance with two nested circles
+concentric:dbscan_add_data(select Stream of gen_datapoint(1.0, 0.0, 0.2, range(1000)));
+concentric:dbscan_add_data(select Stream of gen_datapoint(0.5, 0.0, 0.2, range(500)));
+
+// Visualize the concentric data
+
+//plot: Scatter plot
+select vector of { "cos(x)": v[1], "sin(x)": v[2] }
+  from Vector v, Number n
+ where v = concentric:datapoints(n);
+
+ // Train the DBScan model
+ // The first argument is epsilon, the maximum distance between points classified as neighbors.
+ // The second argument is the minimum number of neighbor points that can constitute a cluster.
+ concentric:dbscan(0.1, 3);
+
+//plot: Multi plot
+{
+  "sa_plot": "Scatter plot",
+  "size_axis": "none",
+  "color_axis": "cluster"
+};
+select vector of { "cos(x)": v[1],
+         "sin(x)": v[2],
+         "cluster": cid
+       }
+  from Number cid, Number pid, Vector v
+ where pid in concentric:clustered_points(cid)
+   and v = concentric:datapoints(pid);
+
+// Now let's create a more problematic example.
+
+// Create a new instance of DBSCAN
+dbscan:generate('linked');
+
+// Populate the concentric instance with two interlocking circles
+linked:dbscan_add_data(select Stream of gen_datapoint(1.0, sqrt(2)/2, 0.2, range(1000)));
+linked:dbscan_add_data(select Stream of gen_datapoint(1.0, 0.0, 0.2, range(500)));
+
+// Visualize the interlocking data
+
+//plot: Scatter plot
+select vector of { "cos(x)": v[1], "sin(x)": v[2] }
+  from Vector v, Number n
+ where v = linked:datapoints(n);
+
+ // Train the DBScan model using the same arguments as before.
+ linked:dbscan(0.1, 3);
+
+// We see that the neighbor-based clustering takes precedence over other structural
+// characteristics of the data. All data points are grouped into a single complex
+// cluster.
+
+//plot: Multi plot
+{
+  "sa_plot": "Scatter plot",
+  "size_axis": "none",
+  "color_axis": "cluster"
+};
+select vector of { "cos(x)": v[1],
+         "sin(x)": v[2],
+         "cluster": cid
+       }
+  from Number cid, Number pid, Vector v
+ where pid in linked:clustered_points(cid)
+   and v = linked:datapoints(pid);
