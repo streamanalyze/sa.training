@@ -19,7 +19,7 @@ create function gen_datapoint(Number rad, Number xy_offset, Number noise, Number
 // Test the gen_datapoint function out
 
 //plot: Scatter plot
-select Vector of gen_datapoint(1, 0.2, 0.0, 0.0, range(100));
+select Vector of gen_datapoint(1, 0.2, 0.0, range(100));
 
 // Populate the concentric instance with two nested circles
 concentric:dbscan_add_data(select Stream of gen_datapoint(1.0, 0.0, 0.2, range(1000)));
