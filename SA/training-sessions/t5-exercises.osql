@@ -1,0 +1,11 @@
+// 1. Go to drill-broken and repair the helper functions using tests
+// 2. Connect to a federation (eg. sa-community)
+
+// 3. Connect a phone to the federation
+// 4. Deploy drill-broken on the phone
+
+// 5. Run the model, using simulated termometer and real accelerometer
+
+// 6. Experiment with shaking the phone and running the model with different classes 
+// 7. Edit the thresholds in helper.osql and iterate from step 4
+// 8. Create a relase 1.0 of the drill-broken model

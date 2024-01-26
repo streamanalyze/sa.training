@@ -1,0 +1,102 @@
+// **************************************
+// Training session 5
+// Models and federations
+// **************************************
+
+// **************************************
+// 1. Releasing models
+// **************************************
+
+// View all user models in the local models folder
+models:list();
+
+// View all model packages in local model-releases folder
+models:installed();
+
+// Models loaded into this SA Engine instance
+models:loaded();
+
+// lets create a realase from one of the training models
+models:create_release('detect-shake','0.1');
+
+// we can see the package listed
+models:installed();
+
+// now we'll import it
+models:import('detect-shake','0.1');
+
+// import will create an un-packaged version appears in our models list
+models:list();
+
+// ... and load it
+models:loaded();
+
+// Since it is loaded functionality is available
+simulate_temperature(); //TODO: change to something in detect-shake
+
+// **************************************
+// 2. Publish release to a federation
+// **************************************
+
+// connect to a saved federation
+federation:connect("sa-community", "vscode-myname", true, false);
+
+//publish the release to the model repository of the nameserver
+models:publish('detect-shake',"0.1");
+
+// Now the edges can import the model from the repository
+
+//peer: android-edge
+models:import('detect-shake','0.1');
+
+//peer: android-edge
+shakes(signal_stream('accelerometer'));
+
+
+// **************************************
+// 3. Setting up a local test federation in VS Code
+// **************************************
+
+// start a new sa.engine instance in this computer that will act as a nameserver
+start_nameserver("ns");
+
+// give ourselfs a name in the federation
+reregister("me");
+
+// Check my ip - this could be used to connect a devie that is on the same network
+my_local_ip(); 
+
+//edit as needed and run in the edge device
+//edge_listener("pi@192.168.0.62");
+
+// start a new sa.engine instance in this computer that will act as an edge
+start_edge("test_edge");
+
+// lets verify
+listening_edges();
+
+edge_status();
+
+//peer: test_edge
+select heartbeat(0.1) limit 10;
+
+// **************************************
+// 4. Managing edges in groups
+// **************************************
+
+// Add the edge "pi" to a group
+//peer: nameserver
+edge:add_group("pi", "my_group");
+
+// List all groups with "pi" in
+//peer: nameserver
+edge:groups("pi");
+
+//peer: nameserver
+edge:set_group_models("my-group",
+                      [{"repo": "default",
+                        "name": "detect-shake",
+                        "version": "0.1"}]);
+
+// observe model being loaded in pi
+// restart and reconnect sa.engine in the edge - observe the model being loaded

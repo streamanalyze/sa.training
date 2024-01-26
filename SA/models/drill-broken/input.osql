@@ -1,8 +1,10 @@
 create function simulate_temperature() -> Stream of number 
-as simstream(1);
+as 17 + 10*sin(heartbeat(1)) + frand(-5,5);
 
 create function simulate_accelerometer() -> Stream of Vector of real 
 as select stream of [frand(-0.5,0.5), 
                 frand(-0.5,0.5),
                 frand(8.5,9.5)]
 from number h where h in heartbeat(0.03);
+
+

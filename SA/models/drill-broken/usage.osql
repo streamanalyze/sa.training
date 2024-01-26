@@ -1,0 +1,5 @@
+// load the model
+models:load('drill-broken');
+
+// start the model with eg. 
+alert_changed("CHEAP", simulate_accelerometer(), simulate_temperature());
