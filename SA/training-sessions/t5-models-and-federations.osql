@@ -32,13 +32,13 @@ models:list();
 models:loaded();
 
 // Since it is loaded functionality is available
-simulate_temperature(); //TODO: change to something in detect-shake
+recorded_accelerometer();
 
 // **************************************
 // 2. Publish release to a federation
 // **************************************
 
-// connect to a saved federation
+// connect to a saved federation - or use GUI
 federation:connect("sa-community", "vscode-myname", true, false);
 
 //publish the release to the model repository of the nameserver
@@ -52,10 +52,14 @@ models:import('detect-shake','0.1');
 //peer: android-edge
 shakes(signal_stream('accelerometer'));
 
+// Disconnect using GUI
 
 // **************************************
 // 3. Setting up a local test federation in VS Code
 // **************************************
+
+// secure sockets will not work locally
+_lisp("(disable-secure-sockets)"); 
 
 // start a new sa.engine instance in this computer that will act as a nameserver
 start_nameserver("ns");
@@ -78,25 +82,13 @@ listening_edges();
 edge_status();
 
 //peer: test_edge
-select heartbeat(0.1) limit 10;
+select heartbeat(0.5) limit 10;
 
-// **************************************
-// 4. Managing edges in groups
-// **************************************
+// not needed
+// models:publish('detect-shake',"0.1");
 
-// Add the edge "pi" to a group
-//peer: nameserver
-edge:add_group("pi", "my_group");
+//peer: pi
+models:import('detect-shake','0.1');
 
-// List all groups with "pi" in
-//peer: nameserver
-edge:groups("pi");
-
-//peer: nameserver
-edge:set_group_models("my-group",
-                      [{"repo": "default",
-                        "name": "detect-shake",
-                        "version": "0.1"}]);
-
-// observe model being loaded in pi
-// restart and reconnect sa.engine in the edge - observe the model being loaded
+//peer: pi
+shakes(select stream of fake_accelerometer() limit 300);

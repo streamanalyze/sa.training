@@ -25,8 +25,11 @@ select r["edge_mode"] from record r where r in edge:actual_state(:edge_name);
 // Change back to INTERACTIVE
 edge:set_mode(:edge_name, "INTERACTIVE");
 
+// will take longer to be set - until next poll
+edge:actual_state(:edge_name);
+
 // **************************************
-// Store and forward
+// Store and forward with default forward function
 // **************************************
 
 // Create a record with settings
@@ -34,12 +37,12 @@ set :cq_name = "forward1";
 
 set :forward_options = {
   "store-and-forward": :cq_name, // name
-  "store-and-forward-interval": 3, // how often to try sending to server (seconds)
-  "buffer-size": 100               // max number of stored values
+  "store-and-forward-interval": 5, // how often to try sending to server (seconds)
+  "buffer-size": 1000              // max number of stored values
 };
 
 // Define the query to forward as a string
-set :test_query = "select simstream(1) limit 1000";
+set :test_query = "select heartbeat(0.5) limit 1000";
 
 // start a store-and-forward query
 edge_cq(:edge_name, :test_query, :forward_options);
@@ -54,21 +57,24 @@ select r["requests"] from record r where r in edge_status() and r["id"]=upper(:e
 edge:set_mode(:edge_name, "ONLINE");
 
 // to see any result, we must subscribe to the query
+// snf queries are named <edge-name>-SNF-<cq-name>, all upper case
+// The subscription must currently be run on nameserver
 
-// subscribe with @ notation (sa.engine 5.5 or later)
-subscribe(:cq_name+"@"+:edge_name);
+//peer: nameserver
+subscribe("TEST_EDGE-SNF-FORWARD1");
 
-// alternative for older versions
-// subscribe:merge([:cq_name+"@"+:edge_name])
+// need to be interactive to cancel the query
+edge:set_mode(:edge_name, "INTERACTIVE");
 
 //now, cancel the edge query
-cancel_edge_cq(:edge_name, :cq_name);
+cancel_edge_cq("test_edge", "forward1");
+
 
 // **************************************
-// Store and forward with a storer function
+// Store and forward with a csv function as forward function
 // **************************************
 
-//A built-in store function that stores every forward in a csv file
+//A built-in forward function that stores data every interval in a csv file
 doc('snf_csv_storer');
 
 // lets add it to a new options record
@@ -86,8 +92,6 @@ edge_cq(:edge_name, :test_query, :forward_options_2);
 // in this folder, observe how lots of csv files are created
 get_snf_folder(:edge_name);
 
-subscribe(:cq_name2 + "@" + :edge_name);
-
 // stop the query
 cancel_edge_cq(:edge_name, :cq_name2);
 
@@ -103,7 +107,6 @@ set :cq_name3 = "forward3";
 set :forward_options_3 = {
   "store-and-forward": :cq_name3,
   "store-and-forward-interval": 10, //try to send the result every 10 seconds. A more realistic value may be eg. 10 minutes
-  "store-and-forward-storefn": "snf_csv_storer", //store in csv
   "buffer-size": 10000 //lets have a large buffer in case connection is down for a long time 
 };
 
@@ -113,10 +116,8 @@ set :model_query = "alert_changed('CHEAP', simulate_accelerometer(), simulate_te
 // start the query
 edge_cq(:edge_name, :model_query, :forward_options_3);
 
-// subscribtion will get result continously
-subscribe(:cq_name3 + "@" + :edge_name);
-
-// but if connection is lost it takes 10 seconds between reconnect attempts
+//peer: nameserver
+subscribe("TEST_EDGE-SNF-FORWARD3");
 
 // stop the query
 cancel_edge_cq(:edge_name, :cq_name3);

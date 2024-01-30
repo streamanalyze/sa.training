@@ -1,2 +1,2 @@
-load_osql(models:folder('drill-broken') + "helper.osql");
-load_osql(models:folder('drill-broken') + "input.osql");
+load_osql("helper.osql");
+load_osql("input.osql");
