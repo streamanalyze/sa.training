@@ -45,7 +45,7 @@ winagg(sin(heartbeat(0.1)*5),10,2);
 create function my_sampler(stream of number input) -> stream of number
 as select x
 from number x
-where x in winagg(input, 1, 10);
+where [x] in winagg(input, 1, 10);
 
 // call the function
 my_sampler(heartbeat(0.1));
