@@ -1,0 +1,31 @@
+// Example function that takes a number
+create function something(integer input) -> integer as 
+input * 5;
+
+// Example use:
+something(1);
+
+something(2);
+
+// Call the function with a range gives several outputs, in a bag
+something(range(1,2));
+
+// This can be done with several arguments at the same time
+create function something_more(integer input, integer input2) -> integer as 
+input + input2;
+
+something_more(1,1);
+
+something_more(range(1,2), 1);
+
+something_more(range(1,2), range(1,2));
+
+// Create a function that expects a vector
+create function vector_taker(vector of integer somethings) -> integer as
+sum(somethings);
+
+// this is not allowed because of the return type of something()
+vector_taker(something(range(1,2)));
+
+// but then we just do this
+vector_taker(select vector of something(range(1,2)));
