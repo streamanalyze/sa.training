@@ -26,7 +26,6 @@ select Stream of x
    and x > 0.7;
 
 // windows over streams
-
 doc("winagg");
 
 //plot: line plot
@@ -43,7 +42,7 @@ winagg(sin(heartbeat(0.1)*5),10,2);
 
 // A function with a CQ
 create function my_sampler(stream of number input) -> stream of number
-as select x
+as select stream of x
 from number x
 where [x] in winagg(input, 1, 10);
 
