@@ -77,5 +77,5 @@ create function problem2_1(stream of number s) -> stream of number
 
 
 validate "problem 2-1"
-  check problem2_1(vstream([1,2,3,4,5,6,7,8,9,10,11,12,13,14]))
+  check extract(problem2_1(vstream([1,2,3,4,5,6,7,8,9,10,11,12,13,14])))
           => bag(1,2,3,4,5,6,7,8,9);

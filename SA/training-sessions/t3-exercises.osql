@@ -62,8 +62,8 @@ validate "problem 4-3"
 // and, whenever there is a value divisible with 100, 
 // gets a timewindow of 100 ms.
 
-create function hundred_p(Timeval of Number tn) -> Boolean
-    as select mod(value(tn),100) = 0;
+create function hundred_p(Timeval of Integer ti) -> Boolean
+    as select mod(value(ti),100) = 0;
  
 create function problem4_4(Stream of Timeval tv) -> Stream of Timeval of vector
   as /* Write your solution here */
