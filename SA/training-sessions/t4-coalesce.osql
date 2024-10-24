@@ -1,0 +1,44 @@
+// Create a function that may return null depending on input
+create function calculations(integer input) -> real
+as sin(sqrt(input)) + 1 + input;
+
+// not null
+calculations(1);
+
+//null
+calculations(-2);
+
+// as in select.osql, call it with many inputs
+// null values are ignored
+calculations(range(-5,5));
+
+// now use calculations in an outer function
+create function above(integer input, integer threshold) -> real
+as select calculated - threshold
+from real calculated
+where calculated = calculations(input);
+
+// our null calculation are still ignored
+above(range(-5,5),0);
+
+//lets say we wanted them - try to use a case
+create function above_with_zero(integer input, integer threshold) -> real
+as select case when calculated then calculated- threshold else 0-threshold end 
+from real calculated
+where calculated = calculations(input);
+
+// nop - function is terminated as soon as calculated returns null
+above_with_zero(range(-5,5),0);
+
+// The solution - Coalesce. Coalesce returns the first non-null value
+coalesce(null,1);
+
+coalesce(null,null, 2, null, 3);
+
+//Use it in our function
+create function above_with_zero(integer input, integer threshold) -> real
+as select calculated - threshold
+from real calculated
+where calculated = coalesce(calculations(input),0);
+
+above_with_zero(range(-5,5),0);

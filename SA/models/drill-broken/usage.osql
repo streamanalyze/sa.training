@@ -3,3 +3,10 @@ models:load('drill-broken');
 
 // start the model with eg. 
 alert_changed("CHEAP", simulate_accelerometer(), simulate_temperature());
+
+// Expected output: 
+//[0,0]
+//[1,0]
+//[0,0]
+//[1,0]
+// ...

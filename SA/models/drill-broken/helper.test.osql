@@ -1,3 +1,4 @@
 load_osql(models:folder('drill-broken') + "helper.osql");
 
 // Use the validate-check syntax to test the functions in helper.osql
+// focus on get_criteria and shake_alert
