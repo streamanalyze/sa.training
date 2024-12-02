@@ -54,3 +54,19 @@ create function add_scalar(vector v, integer scalar) -> vector
 as v + scalar;
 
 add_scalar([1,1,1,1], 5);
+
+// SQL queries
+
+create table TrainingSession(id Integer,
+                             name Charstring, 
+                             unique(id));
+
+insert into TrainingSession values (1, 'SA Engine Intro'),
+                              (2, 'OSQL queries and streams'),
+                              (3, 'Understanding and modeling data');
+
+select * from TrainingSession
+
+select t.name
+from TrainingSession t
+where t.id = 1
