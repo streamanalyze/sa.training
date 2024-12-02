@@ -1,0 +1,38 @@
+// **************************************
+// Setting up a local test federation in VS Code
+// **************************************
+
+// secure sockets will not work locally
+_lisp("(disable-secure-sockets)"); 
+
+// start a new sa.engine instance in this computer that will act as a nameserver
+start_nameserver("ns");
+
+// give ourselfs a name in the federation
+reregister("me");
+
+// Check my ip - this could be used to connect a devie that is on the same network
+my_local_ip(); 
+
+//edit as needed and run in the edge device
+//edge_listener("pi@192.168.0.62");
+
+// start a new sa.engine instance in this computer that will act as an edge
+start_edge("test_edge");
+
+// lets verify
+listening_edges();
+
+edge_status();
+
+//peer: test_edge
+select heartbeat(0.5) limit 10;
+
+// not needed
+// models:publish('detect-shake',"0.1");
+
+//peer: pi
+models:import('detect-shake','0.1');
+
+//peer: pi
+shakes(select stream of fake_accelerometer() limit 300);

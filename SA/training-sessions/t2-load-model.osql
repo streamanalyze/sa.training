@@ -18,6 +18,8 @@ recorded_accelerometer();
 
 shakes(recorded_accelerometer());
 
+// **************************************
+
 // save a federation - get blob from SA Studio
 federation:save("sa-community", "--blob--");
 

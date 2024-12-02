@@ -25,7 +25,10 @@ models:installed();
 // now we'll import it
 models:import('detect-shake','0.1');
 
-// import will create an un-packaged version appears in our models list
+// import will un-package  in the models folder
+// with a VERSION file that shows which released version it is
+// It will overwrite any previoysly imported version 
+// as well as the model in development with the same name
 models:list();
 
 // ... and load it
@@ -52,43 +55,20 @@ models:import('detect-shake','0.1');
 //peer: android-edge
 shakes(signal_stream('accelerometer'));
 
+// As seen before, 
+// we can also deploy models in development directly to the edge
+// They get a VERSION file with the string "INTERACTIVE"
+models:deploy(['android-edge'], "my-created-model");
+
+// Take a look at the loaded models on the edge. 
+// The imported detect-shake model has a version 
+// while the deployed my-created-model is unversioned
+
+//peer: android-edge
+models:loaded();
+
+//peer: android-edge
+models:list();
+
 // Disconnect using GUI
 
-// **************************************
-// 3. Setting up a local test federation in VS Code
-// **************************************
-
-// secure sockets will not work locally
-_lisp("(disable-secure-sockets)"); 
-
-// start a new sa.engine instance in this computer that will act as a nameserver
-start_nameserver("ns");
-
-// give ourselfs a name in the federation
-reregister("me");
-
-// Check my ip - this could be used to connect a devie that is on the same network
-my_local_ip(); 
-
-//edit as needed and run in the edge device
-//edge_listener("pi@192.168.0.62");
-
-// start a new sa.engine instance in this computer that will act as an edge
-start_edge("test_edge");
-
-// lets verify
-listening_edges();
-
-edge_status();
-
-//peer: test_edge
-select heartbeat(0.5) limit 10;
-
-// not needed
-// models:publish('detect-shake',"0.1");
-
-//peer: pi
-models:import('detect-shake','0.1');
-
-//peer: pi
-shakes(select stream of fake_accelerometer() limit 300);
