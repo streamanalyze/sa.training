@@ -1,3 +1,4 @@
 {
-        "SA_HOME":["SA"]
+    "SA_HOME":["SA"],
+    "custom_flags": ["-r", ".sa_engine.log"]
 }

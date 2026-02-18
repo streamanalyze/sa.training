@@ -35,6 +35,9 @@ ctof(10);
 
 doc("ctof");
 
+//plot: Line plot
+simstream(0.1);
+
 // Vectors
 set :my_vector = [1,2,3,4];
 

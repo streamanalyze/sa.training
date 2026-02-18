@@ -1,3 +1,11 @@
+SA/docs
+SA/bin
+SA/logs
+SA/model_releases/development*
+SA/models/development*
+SA/temp
+SA/tls
+
 *.~*
 *.o
 *.d
