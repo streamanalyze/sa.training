@@ -3,7 +3,7 @@
 // Examples of basic functions in OSQL
 // **************************************
 
-// place cursor at a line snd press shift-return to run it in OSQL
+// Usage: place cursor at a line and press shift-return to run the OSQL
 
 // Mathematical functions
 1+1;
@@ -68,8 +68,9 @@ insert into TrainingSession values (1, 'SA Engine Intro'),
                               (2, 'OSQL queries and streams'),
                               (3, 'Understanding and modeling data');
 
-select * from TrainingSession
+select * from TrainingSession;
 
 select t.name
-from TrainingSession t
-where t.id = 1
+  from TrainingSession t
+ where t.id = 1;
+ 
