@@ -1,56 +1,176 @@
-// **************************************
-// Training session 2
-// Examples of stream functions in OSQL
-// **************************************
+-- **************************************
+-- Training session 2
+-- Examples of stream functions in OSQL
+-- **************************************
 
-// some functions that create synthetic streams
+-- some functions that create synthetic streams
 heartbeat(1);
 
 simstream(0.1);
 
 sample_stream("Hello stream",1);
 
-// A query theat takes a stream and outputs a stream
-// - a continouos query, CQ
+-- A query theat takes a stream and outputs a stream
+-- - a continouos query, CQ
 
 //plot: Line plot
 select sin(10*x)
   from Number x
  where x in heartbeat(0.05);
 
-// a CQ that acts as a filter
+-- a CQ that acts as a filter
 //plot: Line plot
 select Stream of x
   from Number x
  where x in simstream(0.01)
    and x > 0.7;
 
-// windows over streams
-doc("winagg");
 
-//plot: line plot
-sin(heartbeat(0.1)*5);
+-- -----------------
+-- Combining streams
+-- -----------------
 
-winagg(sin(heartbeat(0.1)*5),10,10);
+-- Stream from diota, parameters (pace(s), start, end)
+diota(2.0, 1, 5);   -- emit values 1-5 with 2.0s pace
 
-//plot: Bar plot
-winagg(sin(heartbeat(0.1)*5),10,10);
+-- Combine streams using merge
+merge([diota(0.2,1,6), diota(0.5,1,5) * 10]);
 
-//same size, smaller stride - a sliding window
-//plot: Bar plot
-winagg(sin(heartbeat(0.1)*5),10,2);
+-- Combine streams using pivot
+pivot([diota(0.2,1,6), diota(0.5,1,5) * 10]);
 
-// A function with a CQ
-create function my_sampler(stream of number input) -> stream of number
-as select stream of x
-from number x
-where [x] in winagg(input, 1, 10);
-
-// call the function
-my_sampler(heartbeat(0.1));
+-- Combine streams using zip
+zip([diota(0.1,1,10), diota(1.0,1,10) * 10]);
 
 
-// bar plot, scatter plot, line plot, pie chart
+-- -----------------
+-- Timestamped streams
+-- -----------------
+
+-- timestamped stream
+select ts(simstream(0.01)) limit 10;
+
+
+create function my_timestamped_stream() -> stream of timeval
+  as select stream of tv
+       from real r, timeval tv
+       where r in simstream(0.01)
+         and tv = ts(r);
+
+-- get timestamp and value from timestamped stream
+select [t, val]
+  from timeval tv, timeval t, real val
+ where tv in my_timestamped_stream()
+   and t = timestamp(tv)
+   and val = value(tv)
+ limit 10;
+
+
+-- -----------------
+-- Bus streams
+-- -----------------
+
+-- Bus stream with id/signal and value/payload
+select Stream of 'S'||mod(i,3), i*10
+  from Integer i
+ where i in range(9);
+
+
+-- Example of synthetic bus stream
+--
+-- One signal 's' every 0.1 seconds
+-- One signal 't' every 0.5 seconds
+--
+create function bus_test_stream() -> stream of vector
+  as select merge([s,t])
+       from stream s, stream t
+      where s = (select stream of [now(), "s", hb]   // stream "s"
+                   from real hb
+                  where hb in heartbeat(0.1))
+        and t = (select stream of [now(), "t", hb]   // stream "t"
+                   from real hb
+                  where hb in heartbeat(0.5));
+
+bus_test_stream();
+
+-- Pivot signals in a bus stream (duplicate values)
+pivot_events(['s','t'], bus_test_stream());
+
+
+-- -----------------
+-- Flows
+-- -----------------
+
+subscribe("my_flow");           -- Listen to "my flow"
+
+publish(siota(1,4), "my_flow"); -- publish to “my_flow”
+
+-- Don't forget to stop listening queries
+
+
+-- Multiple subscribers
+create function listener_1() -> Stream of Real
+  as select Stream of r * 3.0 + 10.0
+       from Real r
+      where r in subscribe("r_flow");
+
+create function listener_2() -> Stream of Real
+  as select Stream of y
+       from Real r, Real y
+      where r in subscribe("r_flow")
+        and y = r*r - sin(r);
+
+//plot: Line plot
+listener_1();
+
+//plot: Line plot
+listener_2();
+
+-- Publish to "r_flow" and see that both subscribers
+-- receive the data stream
+sink(publish(timeout(simstream(0.5),10),"r_flow"));
+
+
+-- Publish from queries
+subscribe('fs1');
+
+select res
+  from Stream of Integer res,
+       Stream of Integer base
+ where base = siota(1,4)
+   and res = publish(base * 2, 'fs1');
+
+
+-- Subscribe in queries
+select i * 10
+  from Integer i
+ where i in subscribe('fs2')
+   and i > 2;
+
+publish(siota(1,4),'fs2');
+
+
+-- -----------------
+-- Recorded data
+-- -----------------
+
+-- Write data to CSV file
+create function my_stream() -> Stream of Vector
+  as select Stream of [n]
+       from Integer n
+      where n in diota(0.1,1,10);
+
+csv:write_file(sa_home() + "my_file.csv", my_stream());
+
+-- Read data from CSV file
+csv:file_stream(sa_home() + "my_file.csv");
+
+
+-- -----------------
+-- Plotting
+-- -----------------
+
+-- bar plot, scatter plot, line plot, pie chart
 
 //plot: Pie chart
 {
@@ -59,13 +179,14 @@ my_sampler(heartbeat(0.1));
   "citrus": 30
 };
 
-// more plot options with multi plot
+-- more plot options with multi plot
 
 //plot: Multi plot
 {'sa_plot': 'Line plot', 'memory': 200};
 select [sin(x), cos(x)]
   from Number x
- where x in 10*heartbeat(.02);
+ where x in 10*heartbeat(.02)
+ limit 400;
 
 //plot: Multi plot
 { "sa_plots":[
@@ -74,6 +195,57 @@ select [sin(x), cos(x)]
 ]};
 select [sin(x)*sin(x/30), cos(x)*cos(x/30)]
   from Number x
- where x in 20*heartbeat(.01) 
+ where x in 20*heartbeat(.01)
+ limit 600;
 
+
+-- -----------------
+-- Testing
+-- -----------------
+
+-- Query-based testing
+validate "square root"
+   check sqrt(4)  => 2
+   check sqrt(0)  => 0
+   check sqrt(-1) => null;
+
+-- Bag value expressions
+validate "bagged result"
+   check range(3)
+         => values 1,2,3;
+
+-- Insignificant order
+validate "insignificant bag order"
+   check range(3)
+         => values 3,1,2;
+
+-- Tuple notation for tuple values
+validate "tuple valued result"
+   check divide(7,5) => (1,2);
+
+-- Rounding numerical values
+validate "square root"
+   check roundto(sqrt(2),3)
+         => 1.414;
+
+-- Rounding collection elements
+validate "rounding collection elements"
+   check roundto([sqrt(2),'hello',12],2)
+         => [1.41,'hello',12]
+   check roundto([sqrt(2),12,[sqrt(3),'hello']],2)
+         => [1.41,12,[1.73,'hello']]
+   check roundto((values 12,'hello',sqrt(2)),2)
+         => values 12,'hello',1.41;
+
+-- Validating streams
+validate 'finite streams'
+   check extract(diota(0.1,1,3))
+         => values 3,1,2           -- insignificant order
+   check vectorof(diota(0.1,1,3))
+         => [1,2,3];               -- order important
+
+-- Validate infinite streams (use first_n)
+validate 'infinite streams'
+   check extract(first_n(heartbeat(0.1), 4))
+         => values 0,0.1,0.2,0.3;
 

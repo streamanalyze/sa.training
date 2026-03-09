@@ -4,8 +4,30 @@
 // smooth and select on streams
 // **************************************
 
-// count-based windows
+-- windows over streams
 doc("winagg");
+
+//plot: line plot
+sin(heartbeat(0.1)*5);
+
+winagg(sin(heartbeat(0.1)*5),10,10);
+
+//plot: Bar plot
+winagg(sin(heartbeat(0.1)*5),10,10);
+
+-- same size, smaller stride - a sliding window
+//plot: Bar plot
+winagg(sin(heartbeat(0.1)*5),10,2);
+
+-- A function with a CQ
+create function my_sampler(stream of number input) -> stream of number
+as select stream of x
+from number x
+where [x] in winagg(input, 1, 10);
+
+-- call the function
+my_sampler(heartbeat(0.1));
+
 
 // tumbling window
 winagg(heartbeat(1), 5, 5);
